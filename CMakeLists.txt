@@ -82,7 +82,7 @@ add_custom_target(${TARGET_NAME}_Run
 )
 
 if(LINUX)
-set(QT_ROOT "/opt/qt/5.14.2/gcc_64")
+set(QT_ROOT ${Qt5_DIR}/../../..)
 set(QT_DEPLOY_URL https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage)
 set(QT_DEPLOY ${PROJECT_SOURCE_DIR}/Tools/linuxdeployqt-continuous-x86_64.AppImage)
 
