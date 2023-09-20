@@ -1,0 +1,89 @@
+# Copy:   (c) 2023 blurryroots innovation qanat OÜ
+# Author: sven freiberg
+
+name: Windows Release
+
+on:
+  push:
+    branches:
+      - 'release/win'
+
+defaults:
+  run:
+    shell: cmd
+
+env:
+  SOURCE_DIR:    ${{ github.workspace }}
+  QT_VERSION:    5.15.2
+  QT_ARCH:       win64_msvc2019_64
+  CMAKE_VERSION: '3.16.x'
+  ARTIFACT:      Eddy
+  BUILD_TYPE:    Debug
+  SHARED_LIBS:   OFF
+  MODULE_LIBS:   OFF
+
+jobs:
+  build:
+    runs-on:  windows-2019
+
+    steps:
+      - name: Installing Qt (cached)
+        uses: jurplel/install-qt-action@v3
+        with:
+          version:          ${{ env.QT_VERSION }}
+          host:             windows
+          target:           desktop
+          arch:             ${{ env.QT_ARCH }}
+          dir:              ${{ runner.temp }}
+          modules:          debug_info
+          setup-python:     false
+          cache:            true
+          cache-key-prefix: ${{ runner.os }}-qt-${{ env.QT_VERSION }}
+
+      - name: Installing cmake
+        uses: jwlawson/actions-setup-cmake@v1.13
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setting up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
+
+      - name: Checking out source code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Staging project
+        run:  |
+          mkdir ${{ env.SOURCE_DIR }}/Staging
+          mkdir ${{ env.SOURCE_DIR }}/Release
+          mkdir ${{ env.SOURCE_DIR }}/Release/Candidate
+          cmake -B ${{ env.SOURCE_DIR }}/Staging ^
+            -DQt5_DIR="${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/lib/cmake/Qt5" ^
+            -DBUILD_ID="${{ env.GITHUB_SHA }}" ^
+            -DBUILD_MODULES=${{ env.MODULE_LIBS }} ^
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} ^
+            -DBUILD_SHARED_LIBS=${{ env.SHARED_LIBS }} ^
+            ${{ env.SOURCE_DIR }}
+
+      - name: Building project
+        working-directory: ${{ env.SOURCE_DIR }}
+        run:  |
+          cmake --build ${{ env.SOURCE_DIR }}\Staging
+      
+      - name: Compressing result
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          type: 'zip'
+          directory: ${{ env.SOURCE_DIR }}
+          filename: Release\Candidate\${{ env.ARTIFACT }}_Win_${{ env.BUILD_TYPE }}_${{ env.GITHUB_SHA }}.zip
+          path: Release
+          exclusions: '*.git* /*node_modules/* .editorconfig /*Candidate/*'
+              
+      - name: Uploading result
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ env.ARTIFACT }}_Win_${{ env.BUILD_TYPE }}_${{ env.GITHUB_SHA }}
+          path: ${{ env.SOURCE_DIR }}\Release\Candidate\${{ env.ARTIFACT }}_Win_${{ env.BUILD_TYPE }}_${{ env.GITHUB_SHA }}.zip

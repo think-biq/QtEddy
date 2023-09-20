@@ -76,7 +76,6 @@ add_custom_target(${TARGET_NAME}_Deploy_Build ALL
 add_custom_target(${TARGET_NAME}_Run
     DEPENDS ${TARGET_NAME}
     DEPENDS ${TARGET_NAME}_Deploy_Build
-    DEPENDS ${TARGET_NAME}_Deploy_Assets
     COMMAND ${RELEASE_TARGET_DIR}/${TARGET_NAME}
     VERBATIM
 )
