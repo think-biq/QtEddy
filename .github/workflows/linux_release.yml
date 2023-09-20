@@ -1,0 +1,79 @@
+# Copy:   (c) 2023 blurryroots innovation qanat OÜ
+# Author: sven freiberg
+
+name: Linux Release
+
+on:
+  push:
+    branches:
+      - 'release/linux'
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SOURCE_DIR:    ${{ github.workspace }}
+  QT_VERSION:    5.15.2
+  QT_ARCH:       gcc_64
+  CMAKE_VERSION: '3.16.x'
+  ARTIFACT:      Eddy
+  BUILD_TYPE:    Debug
+  SHARED_LIBS:   OFF
+  MODULE_LIBS:   OFF
+
+jobs:
+  build:
+    runs-on:  ubuntu-20.04
+
+    steps:
+      - name: Installing Qt (cached)
+        uses: jurplel/install-qt-action@v3
+        with:
+          version:          ${{ env.QT_VERSION }}
+          host:             linux
+          target:           desktop
+          arch:             ${{ env.QT_ARCH }}
+          dir:              ${{ runner.temp }}
+          modules:          debug_info
+          setup-python:     false
+          cache:            true
+          cache-key-prefix: ${{ runner.os }}-qt-${{ env.QT_VERSION }}
+
+      - name: Installing cmake
+        uses: jwlawson/actions-setup-cmake@v1.13
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Checking out source code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+              
+      - name: Staging project
+        run: |
+          mkdir ${{ env.SOURCE_DIR }}/Staging
+          mkdir ${{ env.SOURCE_DIR }}/Packaged
+          cmake -B ${{ env.SOURCE_DIR }}/Staging \
+            -DQt5_DIR="${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/lib/cmake/Qt5" \
+            -DBUILD_ID="${{ env.GITHUB_SHA }}" \
+            -DBUILD_MODULES=${{ env.MODULE_LIBS }} \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DBUILD_SHARED_LIBS=${{ env.SHARED_LIBS }} \
+            ${{ env.SOURCE_DIR }}
+
+      - name: Building project
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: |
+          cmake --build ${{ env.SOURCE_DIR }}/Staging
+              
+      - name: Generating AppImage from results
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: |
+          cmake --build ${{ env.SOURCE_DIR }}/Staging --target Eddy_Build_AppImage
+      
+      - name: Uploading results
+        uses: actions/upload-artifact@v1
+        with:
+          name: Eddy_${{ env.GITHUB_SHA }}_${{ env.BUILD_TYPE }}.AppImage
+          path: ${{ env.SOURCE_DIR }}/Packed/Eddy.AppImage
