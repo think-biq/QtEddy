@@ -112,6 +112,8 @@ add_custom_target(${TARGET_NAME}_Build_AppImage
         ${RELEASE_TARGET_DIR}/Eddy.desktop
         ${QT_ROOT}
         ${RELEASE_TARGET_DIR}/Candidate/${TARGET_NAME}.AppImage
+    COMMAND chmod +x
+        ${RELEASE_TARGET_DIR}/Candidate/${TARGET_NAME}.AppImage
     COMMAND 
     VERBATIM
 )
