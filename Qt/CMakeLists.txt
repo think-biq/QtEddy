@@ -3,6 +3,8 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+
+
 option(CMAKE_BUILD_TYPE "Build mode." "Debug")
 if (NOT CMAKE_BUILD_TYPE)
     message(WARNING "No build type sppecified. Opting for 'Release'.")
@@ -63,11 +65,14 @@ string(
 )
 
 if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
-    message(SEND_ERROR "In-source builds are not allowed. Please specify build directory so that it's nested in project's root directory (like path_to_project/build")
+    message(SEND_ERROR "In-source builds strongly discouraged. Recommendation, use staging directory (e.g cmake -B Staging)")
 endif()
+
+
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 if(MSVC)
+    # Some 17 features are not available in version earlier then 20.
     set(CPP_STANDARD 20)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
 else()
@@ -78,7 +83,9 @@ endif()
 set(PROJECT_SOURCE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 set(PROJECT_HEADER_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/Include")
 
-# .
+
+
+# Setup Qt libraries.
 find_package(Qt5 COMPONENTS Core Widgets Gui REQUIRED)
 # Backwards compatibiltiy.
 if(NOT Qt5_DIR)
@@ -88,6 +95,8 @@ if(NOT Qt5_DIR)
         message(WARNING "QT environment variables missing.")
     endif()
 endif()
+
+
 
 # Core library
 set(PROJECT_NAME_LIB_CORE "${TARGET_NAME}_Core")
@@ -113,6 +122,8 @@ target_link_libraries(${PROJECT_NAME_LIB_CORE}
     Qt5::Core Qt5::Widgets Qt5::Gui
 )
 endif()
+
+
 
 # Editor library
 set(PROJECT_NAME_LIB_EDITOR "${TARGET_NAME}_Editor")
@@ -155,7 +166,9 @@ target_link_libraries(${PROJECT_NAME_LIB_EDITOR}
 )
 endif()
 
-#.
+
+
+# Main executable.
 add_executable(${TARGET_NAME} 
     ${PROJECT_SOURCE_ROOT}/main.cpp
 )
@@ -178,6 +191,8 @@ target_link_libraries(${TARGET_NAME}
     ${PROJECT_NAME_LIB_EDITOR}
 )
 endif()
+
+
 
 # Make sure parent knows where build has been put.
 if(MSVC)
