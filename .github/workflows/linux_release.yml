@@ -17,7 +17,7 @@ env:
   QT_VERSION:    5.15.2
   QT_ARCH:       gcc_64
   CMAKE_VERSION: '3.16.x'
-  ARTIFACT:      Eddy
+  PROJECT:       Eddy
   BUILD_TYPE:    Debug
   SHARED_LIBS:   OFF
   MODULE_LIBS:   OFF
@@ -70,10 +70,10 @@ jobs:
       - name: Generating AppImage from results
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
-          cmake --build ${{ env.SOURCE_DIR }}/Staging --target Eddy_Build_AppImage
+          cmake --build ${{ env.SOURCE_DIR }}/Staging --target ${{ env.PROJECT }}_Build_AppImage
       
       - name: Uploading results
         uses: actions/upload-artifact@v1
         with:
-          name: Eddy_${{ env.GITHUB_SHA }}_${{ env.BUILD_TYPE }}.AppImage
-          path: ${{ env.SOURCE_DIR }}/Packed/Eddy.AppImage
+          name: ${{ env.PROJECT }}_${{ env.GITHUB_SHA }}_${{ env.BUILD_TYPE }}.AppImage
+          path: ${{ env.SOURCE_DIR }}/Release/Candidate/${{ env.PROJECT }}.AppImage
