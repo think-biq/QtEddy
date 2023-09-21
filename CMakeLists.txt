@@ -43,6 +43,7 @@ if(MSVC)
         DEPENDS "${EDDY_BUILD_PATH}/${EXE_NAME}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${EDDY_BUILD_PATH}/${EXE_NAME}
+            ${RELEASE_TARGET_DIR}/${EXE_NAME}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${WINSYS32}/concrt140.dll" "${RELEASE_TARGET_DIR}/concrt140.dll"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -69,10 +70,14 @@ if(MSVC)
         set(WINDEPLOYQT_ARGS --release --compiler-runtime)
     endif()
 
+    set(DEPLOY_CMD ${WINDEPLOYQT}
+            ${WINDEPLOYQT_ARGS}
+            ${RELEASE_TARGET_DIR}/${EXE_NAME})
+    message(STATUS "Preparing DEPLOY_CMD: ${DEPLOY_CMD}")
     # Deploy qt dependencies.
     add_custom_target(${TARGET_NAME}_Deploy_QT_Dependencies_WIN ALL
-        DEPENDS "${RELEASE_TARGET_DIR}/${EXE_NAME}"
-        COMMAND ${WINDEPLOYQT} ${WINDEPLOYQT_ARGS} "${RELEASE_TARGET_DIR}/${EXE_NAME}"
+        DEPENDS ${RELEASE_TARGET_DIR}/${EXE_NAME}
+        COMMAND ${DEPLOY_CMD}
         VERBATIM
     )
 elseif(LINUX)
