@@ -53,8 +53,6 @@ jobs:
               
       - name: Staging project
         run: |
-          mkdir ${{ env.SOURCE_DIR }}/Staging
-          mkdir ${{ env.SOURCE_DIR }}/Packaged
           cmake -B ${{ env.SOURCE_DIR }}/Staging \
             -DQt5_DIR="${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/lib/cmake/Qt5" \
             -DBUILD_ID="${{ env.GITHUB_SHA }}" \

@@ -49,11 +49,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-              
+
       - name: Staging project
         run: |
-          mkdir ${{ env.SOURCE_DIR }}/Staging
-          mkdir ${{ env.SOURCE_DIR }}/Packaged
           cmake -B ${{ env.SOURCE_DIR }}/Staging \
             -DQt5_DIR="${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/lib/cmake/Qt5" \
             -DBUILD_ID="${{ env.GITHUB_SHA }}" \
@@ -66,12 +64,12 @@ jobs:
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
           cmake --build ${{ env.SOURCE_DIR }}/Staging
-              
+
       - name: Generating AppImage from results
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
           cmake --build ${{ env.SOURCE_DIR }}/Staging --target ${{ env.PROJECT }}_Build_AppImage
-      
+
       - name: Uploading results
         uses: actions/upload-artifact@v1
         with:
