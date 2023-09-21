@@ -41,14 +41,16 @@ stage-mac:
 		-DCMAKE_BUILD_TYPE=Release \
 		-DQt5_DIR=$(Qt5_DIR_MAC) \
 		-DBUILD_ID=$(BUILD_ID) \
-		-DBUILD_SHARED_LIBS=ON -DBUILD_MODULES=ON
+		-DBUILD_SHARED_LIBS=ON -DBUILD_MODULES=ON \
+		-DGENERATE_DMG=TRUE
 stage-mac-debug:
 	echo "$(shell brew --prefix qt@5)/lib/cmake/Qt5"
 	cmake -B Staging \
 		-DCMAKE_BUILD_TYPE=Debug \
 		-DQt5_DIR=$(Qt5_DIR_MAC) \
 		-DBUILD_ID=$(BUILD_ID) \
-		-DBUILD_SHARED_LIBS=OFF -DBUILD_MODULES=ON
+		-DBUILD_SHARED_LIBS=ON -DBUILD_MODULES=ON \
+		-DGENERATE_DMG=FALSE
 
 build:
 	cmake --build Staging

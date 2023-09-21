@@ -172,10 +172,18 @@ endif()
 add_executable(${TARGET_NAME} 
     ${PROJECT_SOURCE_ROOT}/main.cpp
 )
+if(APPLE)
+set_target_properties(${TARGET_NAME} PROPERTIES
+    AUTOMOC ON
+    CPP_STANDARD ${CPP_STANDARD}
+    MACOSX_BUNDLE TRUE
+)
+else()
 set_target_properties(${TARGET_NAME} PROPERTIES
     AUTOMOC ON
     CPP_STANDARD ${CPP_STANDARD}
 )
+endif()
 target_include_directories(${TARGET_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
 )
