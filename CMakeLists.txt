@@ -40,7 +40,7 @@ if(MSVC)
     # Gather system dependencies.
     set(WINSYS32 "C:/Windows/System32")
     add_custom_target(${TARGET_NAME}_Deploy_Native_Dependencies_WIN ALL
-        DEPENDS "${EDDY_BUILD_PATH}/${EXE_NAME}"
+        DEPENDS ${TARGET_NAME}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${WINSYS32}/concrt140.dll" "${RELEASE_TARGET_DIR}/concrt140.dll"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -49,13 +49,14 @@ if(MSVC)
             "${WINSYS32}/msvcp140.dll" "${RELEASE_TARGET_DIR}/msvcp140.dll"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${WINSYS32}/vcruntime140.dll" "${RELEASE_TARGET_DIR}/vcruntime140.dll"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${EDDY_BUILD_PATH}/${EXE_NAME}" "${RELEASE_TARGET_DIR}/${EXE_NAME}"
         COMMAND ${CMAKE_COMMAND} 
             -DSRC_PATH=${EDDY_BUILD_PATH}
             -DDST_PATH=${RELEASE_TARGET_DIR} 
             -DPATTERN=*.${LIB_EXT}
             -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${EDDY_BUILD_PATH}/${EXE_NAME} 
+            ${RELEASE_TARGET_DIR}/${EXE_NAME}
         VERBATIM
     )
 
@@ -67,13 +68,12 @@ if(MSVC)
         set(WINDEPLOYQT_ARGS --release --compiler-runtime)
     endif()
 
-    set(DEPLOY_CMD ${WINDEPLOYQT}
-            ${WINDEPLOYQT_ARGS}
-            ${RELEASE_TARGET_DIR}/${EXE_NAME})
+    set(DEPLOY_CMD ${WINDEPLOYQT} ${WINDEPLOYQT_ARGS} ${EXE_NAME})
     message(STATUS "Preparing DEPLOY_CMD: ${DEPLOY_CMD}")
     # Deploy qt dependencies.
     add_custom_target(${TARGET_NAME}_Deploy_QT_Dependencies_WIN ALL
         DEPENDS ${TARGET_NAME}_Deploy_Native_Dependencies_WIN
+        WORKING_DIRECTORY ${RELEASE_TARGET_DIR}
         COMMAND ${DEPLOY_CMD}
         VERBATIM
     )
