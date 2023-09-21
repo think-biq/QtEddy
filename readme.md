@@ -5,6 +5,7 @@ Minimalistic cmake-based Qt Desktop build environment with github action support
 ## Overview
 
 The main application code is located in *Qt*. Auxiliary files and assets are stored in *Raw*. Scripts and utilties are found in *Tools*. Additional cmake scripts are located in *CMake*.
+You can read [this article](https://think-biq.com/blog) for details on the architecture.
 
 ## CMake structure
 
