@@ -13,5 +13,6 @@ As far as cmake is concerned, there is the top-level project, which includes the
 ## Platforms
 
 Current supported platforms are:
-* Windows 10 and upwards
+* Windows (10 and upwards)
 * Linux (comparable to ubuntu 20.08)
+* MacOS (locally 10.*, CI/CD 11 and upwards)
