@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: Manage Qt cache
         uses: actions/cache@v3
-        id: macos-cache-qt-${{ env.QT_VERSION }}
+        id: macos-cache-qt
         with:
           path: |
             ${{ runner.temp }}/Qt/${{ env.QT_VERSION }}
@@ -43,7 +43,7 @@ jobs:
             [ -e ${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }} ] \
             && ls -lav ${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }} \
             || exit 13
-        if: steps.macos-cache-qt-${{ env.QT_VERSION }}.outputs.cache-hit == 'true'
+        if: steps.macos-cache-qt.outputs.cache-hit == 'true'
 
       - name: Installing Qt (cached)
         uses: jurplel/install-qt-action@v3
@@ -57,7 +57,7 @@ jobs:
           setup-python:     false
           cache:            false
           cache-key-prefix: ${{ runner.os }}-qt-${{ env.QT_VERSION }}
-        if: steps.macos-cache-qt-${{ env.QT_VERSION }}.outputs.cache-hit != 'true'
+        if: steps.macos-cache-qt.outputs.cache-hit != 'true'
 
       - name: Installing cmake
         uses: jwlawson/actions-setup-cmake@v1.13
