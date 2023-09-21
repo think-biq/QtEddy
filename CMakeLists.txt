@@ -42,9 +42,6 @@ if(MSVC)
     add_custom_target(${TARGET_NAME}_Deploy_Native_Dependencies_WIN ALL
         DEPENDS "${EDDY_BUILD_PATH}/${EXE_NAME}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${EDDY_BUILD_PATH}/${EXE_NAME}
-            ${RELEASE_TARGET_DIR}/${EXE_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${WINSYS32}/concrt140.dll" "${RELEASE_TARGET_DIR}/concrt140.dll"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${WINSYS32}/vccorlib140.dll" "${RELEASE_TARGET_DIR}/vccorlib140.dll"
@@ -76,7 +73,7 @@ if(MSVC)
     message(STATUS "Preparing DEPLOY_CMD: ${DEPLOY_CMD}")
     # Deploy qt dependencies.
     add_custom_target(${TARGET_NAME}_Deploy_QT_Dependencies_WIN ALL
-        DEPENDS ${RELEASE_TARGET_DIR}/${EXE_NAME}
+        DEPENDS ${TARGET_NAME}_Deploy_Native_Dependencies_WIN
         COMMAND ${DEPLOY_CMD}
         VERBATIM
     )
