@@ -1,7 +1,7 @@
 # Copy:   (c) 2023 blurryroots innovation qanat OÜ
 # Author: sven freiberg
 
-name: Linux Release
+name: Mac Release
 
 on:
   push:
