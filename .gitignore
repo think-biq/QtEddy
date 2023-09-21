@@ -2,4 +2,5 @@ CMakeFiles
 CMakeCache.txt
 Staging/
 Release/
+Tools/linuxdeployqt-continuous-x86_64.AppImage
 *.log
