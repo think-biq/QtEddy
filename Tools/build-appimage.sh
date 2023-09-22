@@ -1,16 +1,31 @@
-APPIMAGETOOL=$1
-DESKTOP=$2
-QT_ROOT=$3
-DEPLOY_TARGET=$4
+# Copy:   (c) 2023 blurryroots innovation qanat OÜ
+# Author: sven freiberg
 
-chmod +x $APPIMAGETOOL
+# Helper script to make sure environment variables are set and result is
+# renamed and located at the desired location.
 
-PATH=$PATH:$QT_ROOT/bin; \
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$QT_ROOT/lib/; \
-$APPIMAGETOOL \
-	$DESKTOP \
-	-appimage -no-translations -no-strip \
-	-extra-plugins=iconengines,platformthemes/libqgtk3.so \
-	-qmake=$QT_ROOT/bin/qmake
+# Read the root dir of Qt installtion.
+QT_ROOT=$1
+shift
+# Read the desired output file path for appimage.
+DESTINATION_FILE=$1
+shift
+# Read the linuxdeployqt toolpath. 
+LINUXDEPLOYQT=$1
+shift
 
-mv *.AppImage $DEPLOY_TARGET
+# Make Qt installtion availble in path and library search.
+export PATH="$PATH:$QT_ROOT/bin"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$QT_ROOT/lib/"
+
+# Make sure the tool is executable.
+chmod +x "$LINUXDEPLOYQT"
+# Call deploy tool. Assume the remaining variables are meant for appimage.
+echo "Running $LINUXDEPLOYQT ..."
+"$LINUXDEPLOYQT" $*
+
+# Copy result to destination file path.
+echo "Copying result to $DESTINATION_FILE ..."
+cp *.AppImage "$DESTINATION_FILE"
+# Make sure app image is executable.
+chmod +x "$DESTINATION_FILE"

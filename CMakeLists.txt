@@ -25,6 +25,7 @@ set(QT_ROOT ${Qt5_DIR}/../../..)
 
 # .
 add_custom_target(${TARGET_NAME}_Prepare_Release_Dir ALL
+    DEPENDS ${TARGET_NAME}
     COMMAND ${CMAKE_COMMAND} -E make_directory
         ${RELEASE_TARGET_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory  
@@ -36,11 +37,12 @@ if(MSVC)
     # .
     set(EXE_NAME "${TARGET_NAME}.exe")
     set(LIB_EXT "dll")
+    set(RELEASE_CANDIDATE_EXE ${RELEASE_TARGET_DIR}/${EXE_NAME})
 
     # Gather system dependencies.
     set(WINSYS32 "C:/Windows/System32")
     add_custom_target(${TARGET_NAME}_Deploy_Native_Dependencies_WIN ALL
-        DEPENDS ${TARGET_NAME}
+        DEPENDS ${TARGET_NAME}_Prepare_Release_Dir
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${WINSYS32}/concrt140.dll" "${RELEASE_TARGET_DIR}/concrt140.dll"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -56,7 +58,7 @@ if(MSVC)
             -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${EDDY_BUILD_PATH}/${EXE_NAME} 
-            ${RELEASE_TARGET_DIR}/${EXE_NAME}
+            ${RELEASE_CANDIDATE_EXE}
         VERBATIM
     )
 
@@ -84,7 +86,7 @@ elseif(LINUX)
 
     # Fetch relevant build artefacts.
     add_custom_target(${TARGET_NAME}_Deploy_Build ALL
-        DEPENDS ${TARGET_NAME}
+        DEPENDS ${TARGET_NAME}_Prepare_Release_Dir
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${EDDY_BUILD_PATH}/${EXE_NAME}" "${RELEASE_TARGET_DIR}/${EXE_NAME}"
         COMMAND ${CMAKE_COMMAND} 
@@ -95,37 +97,52 @@ elseif(LINUX)
         VERBATIM
     )
 
-    set(QT_DEPLOY_URL https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage)
-    set(QT_DEPLOY ${PROJECT_SOURCE_DIR}/Tools/linuxdeployqt-continuous-x86_64.AppImage)
+    set(QT_DEPLOY_TOOL_EXE linuxdeployqt-continuous-x86_64.AppImage)
+    set(QT_DEPLOY_BASE_URL https://github.com/probonopd/linuxdeployqt/releases)
+    set(QT_DEPLOY_TOOL_URL ${QT_DEPLOY_BASE_URL}/download/continuous/${QT_DEPLOY_TOOL_EXE})
+    set(QT_DEPLOY_TOOL_PATH ${PROJECT_SOURCE_DIR}/Tools/${QT_DEPLOY_TOOL_EXE})
 
     message(STATUS "Downloading qt deploy for linux from: ${QT_DEPLOY_URL}")
     include(FetchContent)
     FetchContent_Declare(
       QT_DEPLOY_TOOL_FETCH
-      URL      ${QT_DEPLOY_URL}
+      URL      ${QT_DEPLOY_TOOL_URL}
       URL_HASH MD5=d84f43f29c4f038f0cc2aefda2ee2c5c
       DOWNLOAD_NO_EXTRACT TRUE
       DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/Tools
     )
     FetchContent_MakeAvailable(QT_DEPLOY_TOOL_FETCH)
-    message(STATUS "Available at: ${QT_DEPLOY}")
+    message(STATUS "Available at: ${QT_DEPLOY_TOOL_PATH}")
+
+    set(QT_DEPLOYLINUXCMD ${QT_DEPLOY_TOOL_PATH}
+        ${RELEASE_TARGET_DIR}/Eddy.desktop
+        -appimage
+        -no-translations
+        -no-strip
+        -extra-plugins=iconengines,platformthemes/libqgtk3.so
+        -qmake=${QT_ROOT}/bin/qmake
+    )
+    
+    # .
+    set(RELEASE_CANDIDATE_EXE
+        ${RELEASE_TARGET_DIR}/Candidate/${TARGET_NAME}.AppImage
+    )
 
     # Use linuxdeployqt to generate appimage.
     add_custom_target(${TARGET_NAME}_Build_AppImage
         DEPENDS ${TARGET_NAME}_Deploy_Build
+        WORKING_DIRECTORY ${RELEASE_TARGET_DIR}
         COMMAND ${CMAKE_COMMAND} 
             -DSRC_PATH=${PROJECT_SOURCE_DIR}/Raw/Linux
             -DDST_PATH=${RELEASE_TARGET_DIR}
             -DPATTERN=*
             -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
-        COMMAND ${PROJECT_SOURCE_DIR}/Tools/./build-appimage.sh
-            ${QT_DEPLOY}
-            ${RELEASE_TARGET_DIR}/Eddy.desktop
+        # Qt root, output file path, linuxdeployqt command
+        COMMAND ${PROJECT_SOURCE_DIR}/Tools/./build-appimage.sh        
             ${QT_ROOT}
-            ${RELEASE_TARGET_DIR}/Candidate/${TARGET_NAME}.AppImage
-        COMMAND chmod +x
-            ${RELEASE_TARGET_DIR}/Candidate/${TARGET_NAME}.AppImage
-        COMMAND 
+            ${RELEASE_CANDIDATE_EXE}
+            ${QT_DEPLOYLINUXCMD}
+        BYPRODUCTS ${RELEASE_CANDIDATE_EXE}
         VERBATIM
     )
 elseif(APPLE)
@@ -143,7 +160,7 @@ elseif(APPLE)
 
     # Fetch relevant build artefacts.
     add_custom_target(${TARGET_NAME}_Deploy_Build ALL
-        DEPENDS ${TARGET_NAME}
+        DEPENDS ${TARGET_NAME}_Prepare_Release_Dir
         COMMAND ${CMAKE_COMMAND} 
             -DSRC_PATH=${EDDY_BUILD_PATH}
             -DDST_PATH=${RELEASE_TARGET_DIR} 
@@ -180,16 +197,19 @@ elseif(APPLE)
         VERBATIM
     )
 
-    set(RELEASE_CANDIDATE "${TARGET_NAME}.app/*")
+    set(RELEASE_CANDIDATE_NAME "${TARGET_NAME}.app/*")
     if(GENERATE_DMG)
-        set(RELEASE_CANDIDATE "${TARGET_NAME}.dmg")
-    endif()    
+        set(RELEASE_CANDIDATE_NAME "${TARGET_NAME}.dmg")
+    endif()
+    set(RELEASE_CANDIDATE_EXE
+        ${RELEASE_TARGET_DIR}/Candidate/${RELEASE_CANDIDATE_NAME}
+    )
     add_custom_target(${TARGET_NAME}_Stage_Candidate ALL
         DEPENDS ${TARGET_NAME}_Deploy_QT_Dependencies_MAC
         COMMAND ${CMAKE_COMMAND} 
             -DSRC_PATH=${RELEASE_TARGET_DIR}
             -DDST_PATH=${RELEASE_TARGET_DIR}/Candidate/
-            -DPATTERN=${RELEASE_CANDIDATE}
+            -DPATTERN=${RELEASE_CANDIDATE_NAME}
             -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
         VERBATIM
     )
@@ -200,7 +220,6 @@ endif()
 # Convenice target for running (raw) build files directly.
 add_custom_target(${TARGET_NAME}_Run
     DEPENDS ${TARGET_NAME}
-    DEPENDS ${TARGET_NAME}_Deploy_Build
-    COMMAND ${RELEASE_TARGET_DIR}/${TARGET_NAME}
+    COMMAND ${RELEASE_CANDIDATE_EXE}
     VERBATIM
 )
