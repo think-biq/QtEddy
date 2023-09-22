@@ -1,6 +1,8 @@
 # Eddy
 
-Minimalistic cmake-based Qt Desktop build environment with github action support.
+Minimalistic cmake-based Qt Desktop build environment with github actions support.
+
+![alt text](Raw/Linux/Eddy.png "Eddy")
 
 ## Overview
 
