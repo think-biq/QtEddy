@@ -17,7 +17,7 @@ env:
   QT_VERSION:    5.15.2
   QT_ARCH:       win64_msvc2019_64
   CMAKE_VERSION: '3.16.x'
-  ARTIFACT:      Eddy
+  PROJECT:       Eddy
   BUILD_TYPE:    Debug
   SHARED_LIBS:   OFF
   MODULE_LIBS:   OFF
@@ -80,12 +80,12 @@ jobs:
         with:
           type: 'zip'
           directory: ${{ env.SOURCE_DIR }}
-          filename: Release\Candidate\${{ env.ARTIFACT }}_Win_${{ env.BUILD_TYPE }}.zip
+          filename: Release\Candidate\${{ env.PROJECT }}_Win_${{ env.BUILD_TYPE }}.zip
           path: Release
           exclusions: '*.git* /*node_modules/* .editorconfig /*Candidate/*'
               
       - name: Uploading release candidate
         uses: actions/upload-artifact@master
         with:
-          name: ${{ env.ARTIFACT }}_Win_${{ env.BUILD_TYPE }}.zip
-          path: ${{ env.SOURCE_DIR }}\Release\Candidate\${{ env.ARTIFACT }}_Win_${{ env.BUILD_TYPE }}.zip
+          name: ${{ env.PROJECT }}_Win_${{ env.BUILD_TYPE }}.zip
+          path: ${{ env.SOURCE_DIR }}\Release\Candidate\${{ env.PROJECT }}_${{ env.BUILD_TYPE }}_Win.zip
