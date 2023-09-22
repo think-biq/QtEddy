@@ -65,13 +65,13 @@ jobs:
         run: |
           cmake --build ${{ env.SOURCE_DIR }}/Staging
 
-      - name: Generating AppImage from results
+      - name: Prepare release candidate
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
-          cmake --build ${{ env.SOURCE_DIR }}/Staging --target ${{ env.PROJECT }}_Build_AppImage
+          cmake --build ${{ env.SOURCE_DIR }}/Staging --target ${{ env.PROJECT }}_Compile_Release_Candidate
 
-      - name: Uploading results
+      - name: Uploading release candidate
         uses: actions/upload-artifact@v1
         with:
-          name: ${{ env.PROJECT }}_${{ env.GITHUB_SHA }}_${{ env.BUILD_TYPE }}.AppImage
+          name: ${{ env.PROJECT }}_${{ env.BUILD_TYPE }}.AppImage
           path: ${{ env.SOURCE_DIR }}/Release/Candidate/${{ env.PROJECT }}.AppImage

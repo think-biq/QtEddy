@@ -79,23 +79,17 @@ if(MSVC)
         COMMAND ${DEPLOY_CMD}
         VERBATIM
     )
+
+    add_custom_target(${TARGET_NAME}_Compile_Release_Candidate
+        DEPENDS ${TARGET_NAME}_Deploy_QT_Dependencies_WIN
+        WORKING_DIRECTORY ${RELEASE_TARGET_DIR}
+        COMMAND echo "Compiling ..."
+        VERBATIM
+    )
 elseif(LINUX)
     # .
     set(EXE_NAME "${TARGET_NAME}")
     set(LIB_EXT "so")
-
-    # Fetch relevant build artefacts.
-    add_custom_target(${TARGET_NAME}_Deploy_Build ALL
-        DEPENDS ${TARGET_NAME}_Prepare_Release_Dir
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${EDDY_BUILD_PATH}/${EXE_NAME}" "${RELEASE_TARGET_DIR}/${EXE_NAME}"
-        COMMAND ${CMAKE_COMMAND} 
-            -DSRC_PATH=${EDDY_BUILD_PATH}
-            -DDST_PATH=${RELEASE_TARGET_DIR} 
-            -DPATTERN=*.${LIB_EXT}
-            -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
-        VERBATIM
-    )
 
     set(QT_DEPLOY_TOOL_EXE linuxdeployqt-continuous-x86_64.AppImage)
     set(QT_DEPLOY_BASE_URL https://github.com/probonopd/linuxdeployqt/releases)
@@ -114,32 +108,64 @@ elseif(LINUX)
     FetchContent_MakeAvailable(QT_DEPLOY_TOOL_FETCH)
     message(STATUS "Available at: ${QT_DEPLOY_TOOL_PATH}")
 
+    # Collect relevant build artefacts and put them into a FHS structure.
+    # https://github.com/probonopd/linuxdeployqt/issues/237#issuecomment-472721609
+    add_custom_target(${TARGET_NAME}_Prepare_FSH_Structure
+        DEPENDS ${TARGET_NAME}
+        WORKING_DIRECTORY ${RELEASE_TARGET_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            usr/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${EDDY_BUILD_PATH}/${EXE_NAME}"
+            usr/bin/${EXE_NAME}
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            usr/share/icons/hicolor
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/Raw/Linux/${TARGET_NAME}.desktop"
+            usr/share/${TARGET_NAME}.desktop
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/Raw/Linux/${TARGET_NAME}.png"
+            usr/share/icons/hicolor/512x512/${TARGET_NAME}.png
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            usr/lib
+        COMMAND ${CMAKE_COMMAND} 
+            -DSRC_PATH=${EDDY_BUILD_PATH}
+            -DDST_PATH=${RELEASE_TARGET_DIR}/usr/lib
+            -DPATTERN=*.so
+            -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
+    )
+
+    # Compile arguments for deploy command.
+    set(DYNLIBS_TO_DEPLOY "")
+    file(GLOB DYNLIBS
+        ${RELEASE_TARGET_DIR}/usr/lib/*.so
+    )
+    foreach(DL IN LISTS ${DYNLIBS})
+        set(DYNLIBS_TO_DEPLOY "${DYNLIBS_TO_DEPLOY} -executable=${DL}")
+    endforeach()
+    # Create deploy command.
     set(QT_DEPLOYLINUXCMD ${QT_DEPLOY_TOOL_PATH}
-        ${RELEASE_TARGET_DIR}/Eddy.desktop
+        ${DYNLIBS_TO_DEPLOY}
+        usr/share/${TARGET_NAME}.desktop
         -appimage
-        -no-translations
-        -no-strip
         -extra-plugins=iconengines,platformthemes/libqgtk3.so
         -qmake=${QT_ROOT}/bin/qmake
-    )
-    
-    # .
+        -no-translations
+        -no-strip
+    )    
+    # Define release candidate output.
     set(RELEASE_CANDIDATE_EXE
         ${RELEASE_TARGET_DIR}/Candidate/${TARGET_NAME}.AppImage
     )
 
     # Use linuxdeployqt to generate appimage.
-    add_custom_target(${TARGET_NAME}_Build_AppImage
-        DEPENDS ${TARGET_NAME}_Deploy_Build
+    add_custom_target(${TARGET_NAME}_Compile_Release_Candidate
+        DEPENDS ${TARGET_NAME}_Prepare_FSH_Structure
         WORKING_DIRECTORY ${RELEASE_TARGET_DIR}
-        COMMAND ${CMAKE_COMMAND} 
-            -DSRC_PATH=${PROJECT_SOURCE_DIR}/Raw/Linux
-            -DDST_PATH=${RELEASE_TARGET_DIR}
-            -DPATTERN=*
-            -P ${PROJECT_SOURCE_DIR}/CMake/CopyRecursiveCmd.cmake
         # Qt root, output file path, linuxdeployqt command
         COMMAND ${PROJECT_SOURCE_DIR}/Tools/./build-appimage.sh        
             ${QT_ROOT}
+            ${RELEASE_TARGET_DIR}
             ${RELEASE_CANDIDATE_EXE}
             ${QT_DEPLOYLINUXCMD}
         BYPRODUCTS ${RELEASE_CANDIDATE_EXE}
@@ -204,7 +230,7 @@ elseif(APPLE)
     set(RELEASE_CANDIDATE_EXE
         ${RELEASE_TARGET_DIR}/Candidate/${RELEASE_CANDIDATE_NAME}
     )
-    add_custom_target(${TARGET_NAME}_Stage_Candidate ALL
+    add_custom_target(${TARGET_NAME}_Compile_Release_Candidate
         DEPENDS ${TARGET_NAME}_Deploy_QT_Dependencies_MAC
         COMMAND ${CMAKE_COMMAND} 
             -DSRC_PATH=${RELEASE_TARGET_DIR}

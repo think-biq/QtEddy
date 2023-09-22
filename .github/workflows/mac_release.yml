@@ -70,10 +70,10 @@ jobs:
       - name: Prepare release candidate
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
-          cmake --build ${{ env.SOURCE_DIR }}/Staging --target ${{ env.PROJECT }}_Stage_Candidate
+          cmake --build ${{ env.SOURCE_DIR }}/Staging --target ${{ env.PROJECT }}_Compile_Release_Candidate
       
-      - name: Uploading results
+      - name: Uploading release candidate
         uses: actions/upload-artifact@v1
         with:
-          name: ${{ env.PROJECT }}_${{ env.GITHUB_SHA }}_${{ env.BUILD_TYPE }}.dmg
+          name: ${{ env.PROJECT }}_${{ env.BUILD_TYPE }}.dmg
           path: ${{ env.SOURCE_DIR }}/Release/Candidate/${{ env.PROJECT }}.dmg

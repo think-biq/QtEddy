@@ -7,6 +7,9 @@
 # Read the root dir of Qt installtion.
 QT_ROOT=$1
 shift
+# Working directory, for lookup of local libraries.
+QT_WORKING_DIR=$1
+shift
 # Read the desired output file path for appimage.
 DESTINATION_FILE=$1
 shift
@@ -16,7 +19,7 @@ shift
 
 # Make Qt installtion availble in path and library search.
 export PATH="$PATH:$QT_ROOT/bin"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$QT_ROOT/lib/"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$QT_ROOT/lib/:$QT_WORKING_DIR"
 
 # Make sure the tool is executable.
 chmod +x "$LINUXDEPLOYQT"
@@ -24,8 +27,7 @@ chmod +x "$LINUXDEPLOYQT"
 echo "Running $LINUXDEPLOYQT ..."
 "$LINUXDEPLOYQT" $*
 
-# Copy result to destination file path.
-echo "Copying result to $DESTINATION_FILE ..."
-cp *.AppImage "$DESTINATION_FILE"
+echo "Moving result to $DESTINATION_FILE ..."
+mv *.AppImage "$DESTINATION_FILE"
 # Make sure app image is executable.
 chmod +x "$DESTINATION_FILE"
